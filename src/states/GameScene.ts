@@ -13,7 +13,6 @@ export class GameScene extends Phaser.State {
     numRows = 9;
     gameLayer: Phaser.Sprite;
     swipeStart: Cookie;
-    swipeEnd: Cookie;
     prevX: number = 0;
     prevY: number = 0;
     tick: number = 0;
@@ -141,6 +140,41 @@ export class GameScene extends Phaser.State {
             column * this.tileWidth,
             row * this.tileHeight
         );
+    }
+
+    animate(swap:Swap) {
+        if (swap == null) {
+            new Error("no swap");
+            return;
+        }
+
+        let spriteA = swap.cookieA.sprite;
+        let spriteB = swap.cookieB.sprite;
+
+        if (spriteA == null || spriteB == null) {
+            new Error('no sprite');
+        }
+
+        let spriteAPt = {x:spriteA.position.x, y:spriteA.position.y};
+        let spriteBPt = {x:spriteB.position.x, y:spriteB.position.y};
+
+        let tweenTime = 300;
+
+        this.game.add
+            .tween(spriteA)
+            .to(spriteBPt, tweenTime, Phaser.Easing.Bounce.Out, true);
+
+        // this.scene.game.add
+        //     .tween(spriteA.position.y)
+        //     .to(spriteBPt.y, tweenTime, Phaser.Easing.Bounce.Out, true);
+
+        this.game.add
+            .tween(spriteB)
+            .to(spriteAPt, tweenTime, Phaser.Easing.Bounce.Out, true);
+
+        // this.scene.game.add
+        //     .tween(spriteB.position.y)
+        //     .to(spriteAPt.y, tweenTime, Phaser.Easing.Bounce.Out, true);
     }
 
     preload() {

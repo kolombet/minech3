@@ -4,6 +4,7 @@ import {Array2D} from '../util/Array2D.ts'
 import {Cookie, CookieType} from './Cookie.ts'
 import {Tile} from './Tile.ts'
 import * as Phaser from 'phaser'
+import {Swap} from "./Swap";
 
 export class Level {
     numColumns:number = 9;
@@ -79,6 +80,21 @@ export class Level {
             }
         }
         console.log("level tile init complete");
+    }
+
+    performSwap(swap: Swap) {
+        let colA = swap.cookieA.column;
+        let rowA = swap.cookieA.row;
+        let colB = swap.cookieB.column;
+        let rowB = swap.cookieB.row;
+
+        this.cookies.s(colA, rowA, swap.cookieB);
+        swap.cookieB.column = colA;
+        swap.cookieB.row = rowA;
+
+        this.cookies.s(colB, rowB, swap.cookieA);
+        swap.cookieA.column = colB;
+        swap.cookieA.row = rowB;
     }
 
     // an alternative version using a generator expression
