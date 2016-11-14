@@ -6,6 +6,7 @@ import {Tile} from './Tile.ts'
 import * as Phaser from 'phaser'
 import {Swap} from "./Swap.ts";
 import {Chain, ChainType} from "./Chain.ts";
+import * as Collections from "typescript-collections"
 
 export class Level {
     numColumns: number = 9;
@@ -31,8 +32,6 @@ export class Level {
     }
 
     shuffle(): Array<Cookie> {
-
-
         let set: Array<Cookie>;
 
         for (var i = 0; i < 10; i++) {
@@ -198,12 +197,8 @@ export class Level {
         console.log("level tile init complete");
     }
 
-    removeMatches() {
-
-    }
-
     detectHorizontalMatches(): Array<Chain> {
-        var set = [];
+        let set = [];
         for (var row = 0; row < this.numRows; row++) {
             var column = 0;
             while (column < this.numColumns - 2) {
@@ -229,6 +224,46 @@ export class Level {
             }
         }
         return set;
+    }
+
+    detectVerticalMatches(): Array<Chain> {
+        let set = [];
+        for (var col = 0; col < this.numColumns; col++) {
+            var row = 0;
+            while (row < this.numRows - 2) {
+                let cookie = this.cookies.g(col, row);
+                if (cookie) {
+                    let matchType = cookie.cookieType;
+
+                    let nextOne = this.cookies.g(col, row + 1);
+                    let nextTwo = this.cookies.g(col, row + 2);
+                    if (nextOne.cookieType.eq(matchType) &&
+                        nextTwo.cookieType.eq(matchType)) {
+                        let chain = new Chain(ChainType.vertical);
+                        while (row < this.numRows && this.cookies.g(col, row).cookieType.eq(matchType)) {
+                            chain.add(this.cookies.g(col, row));
+                            row += 1;
+                        }
+
+                        set.push(chain);
+                        continue;
+                    }
+                }
+                row += 1;
+            }
+        }
+        return set;
+    }
+
+    removeMatches() :Array<Chain> {
+        let horChains = this.detectHorizontalMatches();
+        let verChains = this.detectVerticalMatches();
+
+        for (let i = 0; i < verChains.length; i++) {
+            horChains.push(verChains[i]);
+        }
+
+        return horChains;
     }
 
     toString() {
