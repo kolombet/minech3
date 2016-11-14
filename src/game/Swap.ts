@@ -13,4 +13,9 @@ export class Swap {
     description():string {
         return `swap ${this.cookieA} with ${this.cookieB}`;
     }
+
+    eq(lhs:Swap, rhs:Swap):boolean {
+        return  (lhs.cookieA == rhs.cookieA && lhs.cookieB == rhs.cookieB) ||
+                (lhs.cookieB == rhs.cookieB && lhs.cookieA == rhs.cookieB);
+    }
 }

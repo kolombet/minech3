@@ -4,36 +4,117 @@ import {Array2D} from '../util/Array2D.ts'
 import {Cookie, CookieType} from './Cookie.ts'
 import {Tile} from './Tile.ts'
 import * as Phaser from 'phaser'
-import {Swap} from "./Swap";
+import {Swap} from "./Swap.ts";
 
 export class Level {
-    numColumns:number = 9;
-    numRows:number = 9;
-    cookies:Array2D<Cookie>;
-    tiles:Array2D<Tile>;
-    scene:Phaser.State;
-    levelID:number;
+    numColumns: number = 9;
+    numRows: number = 9;
+    cookies: Array2D<Cookie>;
+    tiles: Array2D<Tile>;
+    scene: Phaser.State;
+    levelID: number;
+    possibleSwaps:Array<Swap>;
 
-    constructor(scene:Phaser.State, levelID:number) {
+    constructor(scene: Phaser.State, levelID: number) {
         this.levelID = levelID;
         this.scene = scene;
         this.cookies = new Array2D<Cookie>(this.numColumns, this.numRows);
         this.tiles = new Array2D<Tile>(this.numColumns, this.numRows);
+        this.possibleSwaps = [];
 
         this.init();
     }
 
-    cookieAt(column:number, row:number):Cookie {
+    cookieAt(column: number, row: number): Cookie {
         return this.cookies.g(column, row);
     }
 
-    shuffle() {
+    shuffle(): Array<Cookie> {
+
+
+        let set: Array<Cookie>;
+        while (this.possibleSwaps.length == 0) {
+            set = this.createInitialCookies();
+            this.detectPossibleSwaps();
+            console.log(`possible swaps: ${this.possibleSwaps}`);
+        }
+
         return this.createInitialCookies();
     }
 
-    createInitialCookies() {
+    detectPossibleSwaps(): void {
+        var set = [];
+
+        for (var row = 0; row < this.numRows; row++) {
+            for (var column = 0; column < this.numColumns; column++) {
+                var cookie = this.cookies.g(column, row);
+                if (cookie) {
+                    //detection
+                    if (column < this.numColumns - 1) {
+                        let other = this.cookies.g(column + 1, row);
+                        if (other) {
+                            this.cookies.s(column, row, other);
+                            this.cookies.s(column, row, cookie);
+
+                            if (this.hasChainAt(column + 1, row) ||
+                                this.hasChainAt(column, row)) {
+                                set.push(new Swap(cookie, other));
+                            }
+
+                            this.cookies.s(column, row, cookie);
+                            this.cookies.s(column + 1, row, other);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    hasChainAt(column: number, row: number): boolean {
+        let cookieType = this.cookies.g(column, row).cookieType;
+
+        let horLen = 1;
+
+        let i = column - 1;
+        while (i >= 0 &&
+        this.cookies.g(i, row) &&
+        this.cookies.g(i, row).cookieType == cookieType) {
+            i -= 1;
+            horLen += 1;
+        }
+
+        i = column + 1;
+        while (i < this.numColumns &&
+        this.cookies.g(i, row).cookieType &&
+        this.cookies.g(i, row).cookieType == cookieType) {
+            i += 1;
+            horLen += 1;
+        }
+        if (horLen >= 3)
+            return true;
+
+        let verLen = 1;
+        i = row - 1;
+        while (i >= 0 &&
+        this.cookies.g(column, i) &&
+        this.cookies.g(column, i).cookieType == cookieType) {
+            i -= 1;
+            verLen += 1;
+        }
+
+        i = row + 1;
+        while (i < this.numRows &&
+        this.cookies.g(column, i) &&
+        this.cookies.g(column, i).cookieType == cookieType) {
+            i += 1;
+            verLen += 1;
+        }
+        return verLen >= 3;
+    }
+
+    createInitialCookies(): Array<Cookie> {
         console.log("create initial cookies");
-        let set = new Array<Cookie>();
+        let set = [];
         for (var row = 0; row < this.numRows; row++) {
             for (var column = 0; column < this.numColumns; column++) {
                 var tile = this.tiles.g(column, row) == null ? "null" : "notnull";
@@ -41,7 +122,7 @@ export class Level {
 
 
                 if (this.tiles.g(column, row) != null) {
-                    let cookieType:CookieType = CookieType.getRandomType();
+                    let cookieType: CookieType = CookieType.getRandomType();
 
                     let cookie = new Cookie({column, row, cookieType});
                     this.cookies.s(column, row, cookie);
@@ -53,7 +134,7 @@ export class Level {
         return set;
     }
 
-    tileAt(column:number, row:number):Tile {
+    tileAt(column: number, row: number): Tile {
         return this.tiles.g(column, row);
     }
 
