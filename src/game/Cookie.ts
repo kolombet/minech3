@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser'
+import {CookieSprite} from "./CookieSprite";
 
 /**
  * Created by Kolombet on 11/9/2016.
@@ -10,6 +11,10 @@ export class CookieType {
     constructor(type:number) {
         this.typeID = type;
         this.type = CookieType.getTypesArr()[type];
+    }
+
+    eq(to:CookieType) {
+        return to.typeID == this.typeID;
     }
 
     static getTypes() {
@@ -40,7 +45,7 @@ export class CookieType {
 }
 
 export class Cookie {
-    sprite: Phaser.Sprite;
+    sprite: CookieSprite;
     column: number;
     row: number;
     cookieType: CookieType;
@@ -64,6 +69,6 @@ export class Cookie {
     }
 
     toString(): string {
-        return `${this.column}x${this.row}`
+        return `${this.column+1}x${this.row+1}`
     }
 }

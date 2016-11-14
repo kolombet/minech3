@@ -33,8 +33,14 @@ export class GameViewController {
 
     handleSwipe(swap:Swap) {
         //disable user interaction
-        this.level.performSwap(swap);
-        this.scene.animate(swap);
+
+        if (this.level.isPossibleSwap(swap)) {
+            this.level.performSwap(swap);
+            this.scene.animate(swap);
+        } else {
+            console.log("swipe not possible");
+        }
+
         //enable user interaction on callback
     }
 

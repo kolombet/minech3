@@ -10,6 +10,16 @@ export class Swap {
         this.cookieB = cookieB;
     }
 
+    hashValue():number {
+        var hashValue = this.cookieA.hashValue() ^ this.cookieB.hashValue();
+        // console.log(hashValue);
+        return hashValue;
+    }
+
+    toString():string {
+        return `[${this.cookieA} and ${this.cookieB}]`
+    }
+
     description():string {
         return `swap ${this.cookieA} with ${this.cookieB}`;
     }

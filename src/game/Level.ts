@@ -5,6 +5,7 @@ import {Cookie, CookieType} from './Cookie.ts'
 import {Tile} from './Tile.ts'
 import * as Phaser from 'phaser'
 import {Swap} from "./Swap.ts";
+import {Chain, ChainType} from "./Chain.ts";
 
 export class Level {
     numColumns: number = 9;
@@ -13,7 +14,7 @@ export class Level {
     tiles: Array2D<Tile>;
     scene: Phaser.State;
     levelID: number;
-    possibleSwaps:Array<Swap>;
+    possibleSwaps: Array<Swap>;
 
     constructor(scene: Phaser.State, levelID: number) {
         this.levelID = levelID;
@@ -33,13 +34,17 @@ export class Level {
 
 
         let set: Array<Cookie>;
-        while (this.possibleSwaps.length == 0) {
+
+        for (var i = 0; i < 10; i++) {
             set = this.createInitialCookies();
+            console.log(this.toString());
             this.detectPossibleSwaps();
-            console.log(`possible swaps: ${this.possibleSwaps}`);
+            console.log(`possible swaps: ${this.possibleSwaps.toString()}`);
+            if (this.possibleSwaps.length > 0)
+                break;
         }
 
-        return this.createInitialCookies();
+        return set;
     }
 
     detectPossibleSwaps(): void {
@@ -47,14 +52,14 @@ export class Level {
 
         for (var row = 0; row < this.numRows; row++) {
             for (var column = 0; column < this.numColumns; column++) {
-                var cookie = this.cookies.g(column, row);
-                if (cookie) {
+                let cookie = this.cookies.g(column, row);
+                if (cookie != null) {
                     //detection
                     if (column < this.numColumns - 1) {
                         let other = this.cookies.g(column + 1, row);
-                        if (other) {
+                        if (other != null) {
                             this.cookies.s(column, row, other);
-                            this.cookies.s(column, row, cookie);
+                            this.cookies.s(column + 1, row, cookie);
 
                             if (this.hasChainAt(column + 1, row) ||
                                 this.hasChainAt(column, row)) {
@@ -65,9 +70,26 @@ export class Level {
                             this.cookies.s(column + 1, row, other);
                         }
                     }
+
+                    if (row < this.numColumns - 1) {
+                        let other = this.cookies.g(column, row + 1);
+                        if (other != null) {
+                            this.cookies.s(column, row, other);
+                            this.cookies.s(column, row + 1, cookie);
+
+                            if (this.hasChainAt(column, row + 1) ||
+                                this.hasChainAt(column, row)) {
+                                set.push(new Swap(cookie, other));
+                            }
+
+                            this.cookies.s(column, row, cookie);
+                            this.cookies.s(column, row + 1, other);
+                        }
+                    }
                 }
             }
         }
+        this.possibleSwaps = set;
     }
 
     hasChainAt(column: number, row: number): boolean {
@@ -78,26 +100,29 @@ export class Level {
         let i = column - 1;
         while (i >= 0 &&
         this.cookies.g(i, row) &&
-        this.cookies.g(i, row).cookieType == cookieType) {
+        this.cookies.g(i, row).cookieType.eq(cookieType)) {
             i -= 1;
             horLen += 1;
         }
 
         i = column + 1;
         while (i < this.numColumns &&
-        this.cookies.g(i, row).cookieType &&
-        this.cookies.g(i, row).cookieType == cookieType) {
+        this.cookies.g(i, row) &&
+        this.cookies.g(i, row).cookieType.eq(cookieType)) {
             i += 1;
             horLen += 1;
         }
-        if (horLen >= 3)
+        if (horLen >= 3) {
+            console.log("hor match");
             return true;
+        }
+
 
         let verLen = 1;
         i = row - 1;
         while (i >= 0 &&
         this.cookies.g(column, i) &&
-        this.cookies.g(column, i).cookieType == cookieType) {
+        this.cookies.g(column, i).cookieType.eq(cookieType)) {
             i -= 1;
             verLen += 1;
         }
@@ -105,11 +130,23 @@ export class Level {
         i = row + 1;
         while (i < this.numRows &&
         this.cookies.g(column, i) &&
-        this.cookies.g(column, i).cookieType == cookieType) {
+        this.cookies.g(column, i).cookieType.eq(cookieType)) {
             i += 1;
             verLen += 1;
         }
-        return verLen >= 3;
+
+        if (verLen >= 3) {
+            console.log("ver match");
+            return true;
+        }
+        return false;
+    }
+
+    isPossibleSwap(swap: Swap): boolean {
+        let swaps = this.possibleSwaps.filter((el: Swap) => {
+            return el.hashValue() == swap.hashValue();
+        });
+        return swaps.length > 0;
     }
 
     createInitialCookies(): Array<Cookie> {
@@ -118,8 +155,6 @@ export class Level {
         for (var row = 0; row < this.numRows; row++) {
             for (var column = 0; column < this.numColumns; column++) {
                 var tile = this.tiles.g(column, row) == null ? "null" : "notnull";
-                // console.log(`tile ${row}x${column} is ${tile}`);
-
 
                 if (this.tiles.g(column, row) != null) {
                     let cookieType: CookieType = CookieType.getRandomType();
@@ -161,6 +196,56 @@ export class Level {
             }
         }
         console.log("level tile init complete");
+    }
+
+    removeMatches() {
+
+    }
+
+    detectHorizontalMatches(): Array<Chain> {
+        var set = [];
+        for (var row = 0; row < this.numRows; row++) {
+            var column = 0;
+            while (column < this.numColumns - 2) {
+                let cookie = this.cookies.g(column, row);
+                if (cookie) {
+                    let matchType = cookie.cookieType;
+
+                    let nextOne = this.cookies.g(column + 1, row);
+                    let nextTwo = this.cookies.g(column + 2, row);
+                    if (nextOne.cookieType.eq(matchType) &&
+                        nextTwo.cookieType.eq(matchType)) {
+                        let chain = new Chain(ChainType.horizontal);
+                        while (column < this.numColumns && this.cookies.g(column, row).cookieType.eq(matchType)) {
+                            chain.add(this.cookies.g(column, row));
+                            column += 1;
+                        }
+
+                        set.push(chain);
+                        continue;
+                    }
+                }
+                column += 1;
+            }
+        }
+        return set;
+    }
+
+    toString() {
+        var columnStr = '';
+        for (var row = 0; row < this.numColumns; row++) {
+            let rowStr = '';
+            for (var col = 0; col < this.numRows; col++) {
+                let data = 'x';
+                let isEnabled = (this.cookies.g(col, row) != null);
+                if (isEnabled)
+                    data = this.cookies.g(col, row).cookieType.typeID.toString();
+
+                rowStr += data;
+            }
+            columnStr += rowStr + '\n';
+        }
+        return columnStr;
     }
 
     performSwap(swap: Swap) {

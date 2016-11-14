@@ -73,7 +73,7 @@ export class GameScene extends Phaser.State {
 
     addSprites(cookies: Array<Cookie>): void {
         cookies.forEach((data: Cookie) => {
-            var sprite = new CookieSprite(this.game, 0, 0, data.getImageName());
+            var sprite = new CookieSprite(data, this.game, 0, 0, data.getImageName());
             this.gameLayer.addChild(sprite);
             // let sprite = this.game.add.sprite(0, 0, data.getImageName());
 
@@ -83,7 +83,6 @@ export class GameScene extends Phaser.State {
             sprite.events.onInputDown.add(this.cookieClickDownHandler, this);
             sprite.events.onInputUp.add(this.cookieClickUpHandler, this);
 
-            sprite.data = data;
             data.sprite = sprite;
         })
     }
@@ -119,12 +118,16 @@ export class GameScene extends Phaser.State {
         console.log(`cookie click down ${str}`);
 
         if (this.swipeStart != null) {
-            this.tryToSwap(this.swipeStart, cookie);
+            if (el.data.eq(this.swipeStart) == false) {
+                this.tryToSwap(this.swipeStart, cookie);
+            }
+
+            this.swipeStart.sprite.isSelected = false;
             this.swipeStart = null;
+
         } else {
-            
             this.swipeStart = cookie;
-            // el.scale = new Phaser.Point(1.1, 1.1);
+            el.isSelected = true;
             
             this.tick = 0;
         }
