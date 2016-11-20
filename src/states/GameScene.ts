@@ -4,6 +4,7 @@ import {Level} from '../game/Level.ts';
 import {GameViewController} from '../game/GameViewController.ts';
 import {Swap} from '../game/Swap.ts';
 import {CookieSprite} from '../game/CookieSprite.ts';
+import {Chain} from "../game/Chain";
 
 export class GameScene extends Phaser.State {
     level: Level;
@@ -145,7 +146,7 @@ export class GameScene extends Phaser.State {
         );
     }
 
-    animate(swap:Swap) {
+    animateSwap(swap:Swap, onComplete:Function) {
         if (swap == null) {
             new Error("no swap");
             return;
@@ -163,7 +164,7 @@ export class GameScene extends Phaser.State {
 
         let tweenTime = 300;
 
-        this.game.add
+        var tween = this.game.add
             .tween(spriteA)
             .to(spriteBPt, tweenTime, Phaser.Easing.Bounce.Out, true);
 
@@ -175,9 +176,24 @@ export class GameScene extends Phaser.State {
             .tween(spriteB)
             .to(spriteAPt, tweenTime, Phaser.Easing.Bounce.Out, true);
 
+        tween.onComplete.addOnce(onComplete, this);
+
         // this.scene.game.add
         //     .tween(spriteB.position.y)
         //     .to(spriteAPt.y, tweenTime, Phaser.Easing.Bounce.Out, true);
+    }
+
+    animateMatchedCookies(chains:Array<Chain>, completion:Function) {
+        for (var c = 0; c < chains.length; c++) {
+            let chain = chains[c];
+            for (var d = 0; d < chain.cookies.length; d++) {
+                let cookie = chain[d];
+                let sprite = cookie.sprite;
+                if (sprite != null) {
+                    //animate
+                }
+            }
+        }
     }
 
     preload() {

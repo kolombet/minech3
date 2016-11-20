@@ -22099,7 +22099,7 @@ declare module Phaser {
         scaleMax: Phaser.Point;
 
         /**
-        * A Rope will call its updateAnimation function on each update loop if it has one. Set to a function if you'd like the rope to animate during the update phase. Set to false or null to remove it.
+        * A Rope will call its updateAnimation function on each update loop if it has one. Set to a function if you'd like the rope to animateSwap during the update phase. Set to false or null to remove it.
         */
         updateAnimation: Function;
 

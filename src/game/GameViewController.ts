@@ -36,7 +36,7 @@ export class GameViewController {
 
         if (this.level.isPossibleSwap(swap)) {
             this.level.performSwap(swap);
-            this.scene.animate(swap);
+            this.scene.animateSwap(swap, this.handleMatches);
         } else {
             console.log("swipe not possible");
         }
@@ -54,4 +54,8 @@ export class GameViewController {
     }
 
 
+    handleMatches() {
+        let chains = this.level.removeMatches();
+        console.log("handle matches");
+    }
 }

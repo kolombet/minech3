@@ -6,7 +6,6 @@ import {Tile} from './Tile.ts'
 import * as Phaser from 'phaser'
 import {Swap} from "./Swap.ts";
 import {Chain, ChainType} from "./Chain.ts";
-import * as Collections from "typescript-collections"
 
 export class Level {
     numColumns: number = 9;
@@ -255,9 +254,22 @@ export class Level {
         return set;
     }
 
+    removeCookies(chains:Array<Chain>) {
+        for (var i = 0; i < chains.length; i++) {
+            var chain = chains[i];
+            for (var j = 0; j < chain.cookies.length; j++) {
+                var cookie = chain[j];
+                this.cookies.s(cookie.column, cookie.row, null);
+            }
+        }
+    }
+
     removeMatches() :Array<Chain> {
         let horChains = this.detectHorizontalMatches();
         let verChains = this.detectVerticalMatches();
+
+        this.removeCookies(horChains);
+        this.removeCookies(verChains);
 
         for (let i = 0; i < verChains.length; i++) {
             horChains.push(verChains[i]);
