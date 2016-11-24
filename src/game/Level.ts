@@ -7,43 +7,53 @@ import * as Phaser from 'phaser'
 import {Swap} from "./Swap.ts";
 import {Chain, ChainType} from "./Chain.ts";
 
+export class LevelData {
+    numRows: number;
+    numColumns: number;
+    cookies: Array2D<Cookie>;
+    tiles: Array2D<Tile>;
+
+    constructor() {
+
+    }
+}
+
 export class Level {
     numColumns: number = 9;
     numRows: number = 9;
     cookies: Array2D<Cookie>;
     tiles: Array2D<Tile>;
-    scene: Phaser.State;
-    levelID: number;
     possibleSwaps: Array<Swap>;
 
-    constructor(scene: Phaser.State, levelID: number) {
-        this.levelID = levelID;
-        this.scene = scene;
-        this.cookies = new Array2D<Cookie>(this.numColumns, this.numRows);
-        this.tiles = new Array2D<Tile>(this.numColumns, this.numRows);
+    constructor(data: LevelData) {
+        this.cookies = data.cookies;
+        this.tiles = data.tiles;
+        this.numColumns = data.numColumns;
+        this.numRows = data.numRows;
         this.possibleSwaps = [];
 
-        this.init();
+        //this.init();
+        this.detectPossibleSwaps();
     }
 
     cookieAt(column: number, row: number): Cookie {
         return this.cookies.g(column, row);
     }
 
-    shuffle(): Array<Cookie> {
-        let set: Array<Cookie>;
-
-        for (var i = 0; i < 10; i++) {
-            set = this.createInitialCookies();
-            console.log(this.toString());
-            this.detectPossibleSwaps();
-            console.log(`possible swaps: ${this.possibleSwaps.toString()}`);
-            if (this.possibleSwaps.length > 0)
-                break;
-        }
-
-        return set;
-    }
+    // shuffle(): Array<Cookie> {
+    //     let set: Array<Cookie>;
+    //
+    //     for (var i = 0; i < 10; i++) {
+    //         set = this.createInitialCookies();
+    //         console.log(this.toString());
+    //         this.detectPossibleSwaps();
+    //         console.log(`possible swaps: ${this.possibleSwaps.toString()}`);
+    //         if (this.possibleSwaps.length > 0)
+    //             break;
+    //     }
+    //
+    //     return set;
+    // }
 
     detectPossibleSwaps(): void {
         var set = [];
@@ -147,53 +157,32 @@ export class Level {
         return swaps.length > 0;
     }
 
-    createInitialCookies(): Array<Cookie> {
-        console.log("create initial cookies");
-        let set = [];
-        for (var row = 0; row < this.numRows; row++) {
-            for (var column = 0; column < this.numColumns; column++) {
-                var tile = this.tiles.g(column, row) == null ? "null" : "notnull";
-
-                if (this.tiles.g(column, row) != null) {
-                    let cookieType: CookieType = CookieType.getRandomType();
-
-                    let cookie = new Cookie({column, row, cookieType});
-                    this.cookies.s(column, row, cookie);
-
-                    set.push(cookie);
-                }
-            }
-        }
-        return set;
-    }
+    // createInitialCookies(): Array<Cookie> {
+    //     console.log("create initial cookies");
+    //     let set = [];
+    //     for (var row = 0; row < this.numRows; row++) {
+    //         for (var column = 0; column < this.numColumns; column++) {
+    //             var tile = this.tiles.g(column, row) == null ? "null" : "notnull";
+    //
+    //             if (this.tiles.g(column, row) != null) {
+    //                 let cookieType: CookieType = CookieType.getRandomType();
+    //
+    //                 let cookie = new Cookie({column, row, cookieType});
+    //                 this.cookies.s(column, row, cookie);
+    //
+    //                 set.push(cookie);
+    //             }
+    //         }
+    //     }
+    //     return set;
+    // }
 
     tileAt(column: number, row: number): Tile {
         return this.tiles.g(column, row);
     }
 
     init() {
-        let level = this.scene.game.cache.getJSON('level' + this.levelID);
-        if (!level) return;
 
-        let tiles = level.tiles;
-        if (!tiles) return;
-
-        // var entries:any = Object.entries;
-        for (var r = 0; r < tiles.length; r++) {
-            var row = r;
-            var rowArray = tiles[r];
-            let tileRow = this.numRows - row - 1;
-
-            for (var c = 0; c < tiles.length; c++) {
-                var column = c;
-                var value = rowArray[c];
-
-                if (value == 1) {
-                    this.tiles.s(column, tileRow, new Tile());
-                }
-            }
-        }
-        console.log("level tile init complete");
     }
 
     detectHorizontalMatches(): Array<Chain> {
@@ -207,10 +196,11 @@ export class Level {
 
                     let nextOne = this.cookies.g(column + 1, row);
                     let nextTwo = this.cookies.g(column + 2, row);
-                    if (nextOne.cookieType.eq(matchType) &&
-                        nextTwo.cookieType.eq(matchType)) {
+                    if (nextOne != null && nextOne.cookieType.eq(matchType) &&
+                        nextTwo != null && nextTwo.cookieType.eq(matchType)) {
                         let chain = new Chain(ChainType.horizontal);
-                        while (column < this.numColumns && this.cookies.g(column, row).cookieType.eq(matchType)) {
+                        while (column < this.numColumns &&
+                                this.cookies.g(column, row).cookieType.eq(matchType)) {
                             chain.add(this.cookies.g(column, row));
                             column += 1;
                         }
@@ -236,8 +226,8 @@ export class Level {
 
                     let nextOne = this.cookies.g(col, row + 1);
                     let nextTwo = this.cookies.g(col, row + 2);
-                    if (nextOne.cookieType.eq(matchType) &&
-                        nextTwo.cookieType.eq(matchType)) {
+                    if (nextOne != null && nextOne.cookieType.eq(matchType) &&
+                        nextTwo != null && nextTwo.cookieType.eq(matchType)) {
                         let chain = new Chain(ChainType.vertical);
                         while (row < this.numRows && this.cookies.g(col, row).cookieType.eq(matchType)) {
                             chain.add(this.cookies.g(col, row));
@@ -258,7 +248,7 @@ export class Level {
         for (var i = 0; i < chains.length; i++) {
             var chain = chains[i];
             for (var j = 0; j < chain.cookies.length; j++) {
-                var cookie = chain[j];
+                var cookie = chain.g(j);
                 this.cookies.s(cookie.column, cookie.row, null);
             }
         }
@@ -267,6 +257,9 @@ export class Level {
     removeMatches() :Array<Chain> {
         let horChains = this.detectHorizontalMatches();
         let verChains = this.detectVerticalMatches();
+
+        console.log("hor chain length " + horChains.length);
+        console.log("ver chain length " + verChains.length);
 
         this.removeCookies(horChains);
         this.removeCookies(verChains);

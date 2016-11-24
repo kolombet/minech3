@@ -5,9 +5,12 @@ export class Chain {
 
     constructor(chainType: ChainType) {
         this.chainType = chainType;
+        this.cookies = [];
     }
 
     add(cookie:Cookie) {
+        if (cookie == null)
+            throw new Error("cookie is null");
         this.cookies.push(cookie);
     }
 
@@ -25,6 +28,10 @@ export class Chain {
 
     description(): string {
         return `type:${this.chainType} cookies:${this.cookies}`;
+    }
+
+    g(id): Cookie {
+        return this.cookies[id];
     }
 }
 
